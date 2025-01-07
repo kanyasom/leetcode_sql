@@ -1,6 +1,6 @@
 /*
 Q 1767 :(Google)  
-Tags : [Recursive CTE]
+Tags : [Recursive CTE] (very good)
 
 Table: Tasks
 
@@ -71,3 +71,24 @@ Task 1 was divided into 3 subtasks (1, 2, 3). Only subtask 2 was executed succes
 Task 2 was divided into 2 subtasks (1, 2). No subtask was executed successfully, so we include (2, 1) and (2, 2) in the answer.
 Task 3 was divided into 4 subtasks (1, 2, 3, 4). All of the subtasks were executed successfully.
 */
+
+
+WITH RECURSIVE cte_subtasks AS (
+    -- Base case: Start with the first subtask for each task
+    SELECT task_id, 1 AS subtask_id
+    FROM Tasks
+    WHERE subtasks_count >= 1
+    UNION ALL
+    -- Recursive case: Generate the next subtask for the same task
+    SELECT st.task_id, st.subtask_id + 1
+    FROM cte_subtasks st
+    JOIN Tasks t ON st.task_id = t.task_id
+    WHERE st.subtask_id < t.subtasks_count
+)
+
+SELECT st.task_id, st.subtask_id
+FROM cte_subtasks st
+LEFT JOIN Executed e
+    ON st.task_id = e.task_id AND st.subtask_id = e.subtask_id
+WHERE e.subtask_id IS NULL
+order by st.task_id, st.subtask_id;
